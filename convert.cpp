@@ -455,7 +455,7 @@ void convert_csv(ofstream &output, vector<string> &data, vector<int> &occur)
 	
 	output.open(fname.c_str());
 	
-	output << ',' << "Link," << "Occurrence," << endl; //write column headers
+	output << "Index," << "Link," << "Occurrence," << endl; //write column headers
 	for (int i = 0; i < data.size(); i++)
 	{
 		comma_pos = data[i].find(','); //see if there is a comma in the URL

@@ -14,4 +14,7 @@ Removed features: 	Program will not count data lines anymore.
 			Program will not confirm exiting of menu anymore.
 
 Update 2/21: 	Removed cleaning menu for crawled file.
-		UNcommented get_occur() call for tocrawl files
+		Uncommented get_occur() call for tocrawl files
+
+		Added check for comma to write_csv() for crawled files.
+		Added loop to remove all commas in check for all file types.

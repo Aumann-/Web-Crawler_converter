@@ -246,9 +246,20 @@ void read(ifstream& input, vector<string> &data)
 //function writes data stored in vector to formatted csv file
 void write_csv(ofstream& output, vector<string> &data)
 {
+	int comma_pos = string::npos;
 	output << "Origin,";
 	for(int i = 0; i < data.size(); i++)
 	{
+		do
+		{
+		comma_pos = data[i].find(','); //see if there is a comma in the URL
+		
+		if (comma_pos != string::npos) //If there is...
+		{
+			data[i].erase(data[i].begin() + comma_pos); //remove the comma
+		}
+		}while (comma_pos != string::npos);
+		
 		if (isdigit(data[i][0]) && (data[i].find(" from ") != string::npos)) //if a tier lines (starts with a number), output newline first
 			output << endl << data[i] << ',';
 		else //if a URL, write as-is
@@ -383,13 +394,15 @@ void convert_csv(ofstream &output, vector<string> &data, vector<int> &occur)
 	output << "Link," << "Occurrence" << endl; //write column headers
 	for (int i = 0; i < data.size(); i++)
 	{
+		do
+		{
 		comma_pos = data[i].find(','); //see if there is a comma in the URL
 		
 		if (comma_pos != string::npos) //If there is...
 		{
 			data[i].erase(data[i].begin() + comma_pos); //remove the comma
 		}
-		
+		}while (comma_pos != string::npos);
 		output << data[i] << ',' << occur[i] << endl; //write index number, URL, and occurrence count to file
 	}
 }

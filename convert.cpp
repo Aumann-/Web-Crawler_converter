@@ -34,7 +34,7 @@ Current Status:
 1. Complete
 2. Complete
 3. Complete
-4. Queued
+4. Cancelled
 5. Cancelled
 6. Complete
 7. Complete
@@ -80,9 +80,6 @@ void remove_blanks(vector <string>&);
 
 //Debug function to print all in the vector
 void print(vector <string>&);
-
-//display menu to choose cleaning method
-void menu_crawled(vector<string>&);
 
 int main()
 {
@@ -142,7 +139,6 @@ int main()
 				remove_blanks(data); //basic cleaning
 			}
 			
-			menu_crawled(data); //call menu function to get cleaning choice and confirm
 			break;
 		}
 		case 2: //for duplicate files
@@ -155,7 +151,7 @@ int main()
 		case 3: //for tocrawl files
 		{
 			cout << "Converting to .csv file with occurrence counters." << endl;
-			//get_occur(data, counted_data, occur);
+			get_occur(data, counted_data, occur);
 			convert_csv(output, counted_data, occur);
 			break;
 		}
@@ -326,77 +322,6 @@ void print(vector<string> &data)
 	{
 		cout << data[i] << endl;
 	}
-}
-
-//function to display a menu for extra options
-//once an option is chosen, a description of what the option does is given
-//after the description, program asks for confirmation of choice
-//if confirmed, returns number of option
-//else, menu is displayed again until valid option is confirmed or No Cleaning is chosen
-void menu_crawled(vector<string> &data)
-{
-	int choice;
-	char confirm = 'n';
-	char leave = 'n';
-	cout << "Program will ask for confirmation before cleaning. Positive confirmation will exit menu." << endl;
-	cout << "Extra cleaning:" << endl;
-	cout << "1. Limit to domain" << endl;
-	cout << "2. No Cleaning" << endl;
-
-	cin >> choice;
-
-	switch(choice)
-	{
-	case 1:
-		{
-			cout << "This option will strip all URLs in the data set to just the domain." << endl;
-			cout << "ex. http://www.udacity.com/cs101x/index.html will become http://www.udacity.com/" << endl;
-			cout << endl << "Use this option (y/n): ";
-			cin >> confirm;
-			
-			if(confirm == 'y')
-			{
-				cout << "Need to write domain cleaning function" << endl;
-			}
-			else
-			{
-				menu_crawled(data);
-			}
-			
-			break;
-		}
-	case 2:
-		{
-			cout << "This option will not do any extra cleaning on the data." << endl;
-			cout << endl << "Use this option (y/n): ";
-			cin >> confirm;
-			
-			if (confirm == 'y')
-			{
-				//dead end, doesn't need to do anything
-			}
-			else
-			{
-				menu_crawled(data);
-			}
-			
-			break;
-		}
-	default:
-		{
-			cout << "Not a valid option" << endl;
-			break;
-		}
-	}
-	/* This is no longer needed
-	cout << "Exit menu()? ";
-	cin >> leave;
-	
-	if (leave == 'y')
-		return;
-	else
-		menu_crawled(data); 
-	*/
 }
 
 //function to determine if current link has already been tallied

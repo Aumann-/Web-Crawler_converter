@@ -12,3 +12,6 @@ Updated 2/16: When working with duplicates or tocrawl files from the web crawler
 
 Removed features: 	Program will not count data lines anymore.
 			Program will not confirm exiting of menu anymore.
+
+Update 2/21: 	Removed cleaning menu for crawled file.
+		UNcommented get_occur() call for tocrawl files

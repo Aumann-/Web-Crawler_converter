@@ -1,0 +1,15 @@
+a
+
+2 from a
+
+b
+c
+
+2 from b
+
+b.a
+b.b
+
+1 from c
+
+c.a

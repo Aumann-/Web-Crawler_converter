@@ -6,5 +6,28 @@ The program will ask what file is being converted (crawled links, duplicates, to
 If crawled, blank lines are removed before conversion.
 If duplicates/tocrawl, each unique links if written with a count of its occurrences.
 
-Pending:
-COnversion algorithm for crawled files.
+If using a crawled file, program will convert file using a 2D vector of strings, one vector per line. The data will convert from the base txt file into the following format:
+
+a,NA,NA
+NA,b,NA
+NA,NA,b.a
+NA,NA,b.b
+NA,c,NA
+NA,NA,c.a
+
+Shown in proper.csv.
+
+The extra NA values ar eneeded in the current version of the analyzer.
+
+Current bugs:
+
+Due to the way in which the data is inserted into each vector, data is inserted in reverse order.
+
+a,NA,NA
+NA,c,NA
+NA,NA,c.a
+NA,b,NA
+NA,NA,b.b
+NA,NA,b.a
+
+

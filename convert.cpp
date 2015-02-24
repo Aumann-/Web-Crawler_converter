@@ -31,6 +31,8 @@ The program will have multiple stages:
 
 14. Rewrite write_csv() for new format need for analyzer
 
+15. FIx bug B1
+
 
 Current Status:
 1. Complete
@@ -46,7 +48,11 @@ Current Status:
 11. Complete
 12. Complete
 13. Complete
-14. *SOB*
+14. Complete (?)
+15. Queued
+
+BUGS:
+	B1: Currently prints data backwards due to the way data is inserted into vector
 */
 
 #include <iostream>
@@ -54,14 +60,28 @@ Current Status:
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <sstream>
 
 using namespace std;
+
+//global variables
+
+//vector<string> type for crawled conversion
+typedef vector<string> line;
+
+//prototypes
 
 //This function will read all data from the input file and store it in a vector of strings
 void read(ifstream&, vector <string>&);
 
 //This function will check if link has already been counted
 bool find_link(string&, vector<string>&);
+
+//function to find if tier line has been printed as link and determine depth to lines belonging to the tier
+int find_tier(vector<line>&, string&, int&);
+
+//function to fill empty spots in line with NA strings
+void fill_lines(vector<line>&);
 
 //This function will write all data in the vector of strings to the .csv file
 void write_csv(ofstream&, vector <string>&);
@@ -174,6 +194,54 @@ void read(ifstream& input, vector<string> &data)
 	}
 }
 
+int find_tier(vector<line> &lines, string &key, int &insert_pos)
+{
+	string link;
+	int pos;
+	bool space = false;
+	insert_pos = -1;
+	
+	//separate actual link from tier line by identifying spaces
+	for (int i = 0; i < key.size(); i++)
+	{
+		if (key[i] == ' ' && space == false) //if first space is found, set flag
+		{
+			space = true;
+		}
+		else if (key[i] == ' ' && space == true) //if second space is found, link has been found
+		{
+			pos = i + 1;
+			space = false;
+			break; //no need to look more
+		}
+	}
+	
+	int NA_count = 1;
+	
+	//take link substring from tier line
+	link = key.substr(pos, (key.size() - pos));
+	
+	for (int i = 0; i < lines.size(); i++) //for all vector in lines vector
+	{
+		for (int j = 0; j < lines[i].size(); j++) //for all strings in current subvector
+		{
+			if (lines[i][j].find(link) != string::npos) //if key link is found
+			{
+				insert_pos = i + 1;
+				for ( int k = 0; k < lines[i][j].size(); k++) //for all strings in current subvector
+				{
+					if (lines[i][k] == "NA,") //if string is NA
+					{
+						NA_count++; //increment count of NA strings
+					}
+				}
+			}
+		}
+	}
+	
+	return NA_count;
+}
+
 //function writes data stored in vector to formatted csv file
 void write_csv(ofstream& output, vector<string> &data)
 {
@@ -184,32 +252,92 @@ void write_csv(ofstream& output, vector<string> &data)
 	cin >> ofile;
 
 	output.open(ofile.c_str());
-
 	
 	
+	vector<line> lines;
 	
+	string amount;
+	int true_amount = 0; //holds int value of lines to write based on tier
+	int NA_count = 1; //holds number of NA strings to print
+	int insert_pos; //holds value of where to insert into lines vector
 	
-	
-	int comma_pos = string::npos;
-	output << "Origin,";
-	for(int i = 0; i < data.size(); i++)
+	for (int i = 0; i < data.size(); i++)
 	{
-		do
+		if (i == 0) //currently at origin, write as is
 		{
-			comma_pos = data[i].find(','); //see if there is a comma in the URL
-			
-			if (comma_pos != string::npos) //If there is...
+			line origin;
+			origin.push_back(data[i]);
+			lines.push_back(origin);
+		}
+		else if (isdigit(data[i][0]) && (data[i].find(" from ") != string::npos)) //if at a tier line
+		{
+			for (int j = 0; j < data[i].size(); j++)
 			{
-				data[i].erase(data[i].begin() + comma_pos); //remove the comma
-			}
-		}while (comma_pos != string::npos);
-		
-		if (isdigit(data[i][0]) && (data[i].find(" from ") != string::npos)) //if a tier lines (starts with a number), output newline first
-			output << endl << data[i] << ',';
-		else //if a URL, write as-is
-			output << data[i] << ',';
-	}
+				if (data[i][j] != ' ')
+				{
+					amount.push_back(data[i][j]); //get numerical value for tier
+				}
+				else
+				{
+					break; //once a space is found, break from loop
+				}
+			} //end for
+			
+			NA_count = find_tier(lines, data[i], insert_pos); //get amount of NA strings to print before data value
+			
+			true_amount = atoi(amount.c_str()); //cast found value from string to int
+			amount.clear(); //clear the string for next tier
+		} //end else if
+		else //if a data line
+		{
+			if (true_amount != 0) //only if at least one line for the tier
+			{
+				int j;
+				for (j = i; j < (i + true_amount); j++) //get the next set of data lines
+				{
+					if (isdigit(data[j][0]) && (data[j].find(" from ") != string::npos)) //if another tier line is found
+					{
+						break; //leave the loop
+					}
+					else //found a data line
+					{
+						line l;
+						//print number of NA strings determined by find_tier()
+						for (int n = 0; n < NA_count; n ++)
+						{
+						l.push_back("NA,");
+						}
+						//print data value
+						l.push_back(data[j]);
+						//insert line based on insert_pos value
+						if (insert_pos == -1) //for no tier line (should never trigger)
+						{
+						lines.push_back(l);
+						}
+						else //for lines with a tier
+						{
+							lines.insert(lines.begin() + insert_pos, l);
+						}
+					}
+				}
+				i = j - 1; // needed to prevent duplicates in output
+			}//end if
+		} //end else
+	} //end for
 	
+	fill_lines(lines);
+	
+	for (int i = 0; i < lines.size(); i++)
+	{
+		for (int j = 0; j < lines[i].size(); j++)
+		{
+			output << lines[i][j];
+		}
+		if (i != (lines.size() -1)) //only output new line if not at last line
+		{
+			output << endl;
+		}
+	}
 	
 	cout << "Write successful." << endl;
 }
@@ -312,16 +440,46 @@ void convert_csv(ofstream &output, vector<string> &data, vector<int> &occur)
 	{
 		do
 		{
-		comma_pos = data[i].find(','); //see if there is a comma in the URL
-		
-		if (comma_pos != string::npos) //If there is...
-		{
-			data[i].erase(data[i].begin() + comma_pos); //remove the comma
-		}
+			comma_pos = data[i].find(','); //see if there is a comma in the URL
+			
+			if (comma_pos != string::npos) //If there is...
+			{
+				data[i].erase(data[i].begin() + comma_pos); //remove the comma
+			}
 		}while (comma_pos != string::npos);
+		
 		output << data[i] << ',' << occur[i] << endl; //write index number, URL, and occurrence count to file
 	}
 	
 	cout << "Write Successful." << endl;
+}
+
+void fill_lines(vector<line> &lines)
+{
+	int max_size = 0;
+	//determine size of longest line
+	for (int i = 0; i < lines.size(); i++)
+	{
+		if (lines[i].size() > max_size)
+		{
+			max_size = lines[i].size();
+		}
+	}
+	
+	//for each line shorter than longest line, fill in with NA strings
+	for (int i = 0; i < lines.size(); i++)
+	{
+		while (lines[i].size() < max_size)
+		{
+			if (lines.size() == max_size - 1) //if at the needed size, don't add an extra comma
+			{
+				lines[i].push_back("NA");
+			}
+			else //otherwise, add a comma,NA string
+			{
+				lines[i].push_back(",NA");
+			}
+		}
+	}
 }
 

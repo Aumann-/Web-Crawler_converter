@@ -305,6 +305,7 @@ void write_csv(ofstream& output, vector<string> &data)
 	int true_amount = 0; //holds int value of lines to write based on tier
 	int NA_count = 1; //holds number of NA strings to print
 	int insert_pos; //holds value of where to insert into lines vector
+	int c;
 	
 	for (int i = 0; i < data.size(); i++)
 	{
@@ -329,19 +330,23 @@ void write_csv(ofstream& output, vector<string> &data)
 			} //end for
 			
 			NA_count = find_tier(lines, data[i], insert_pos); //get amount of NA strings to print before data value
-
+			
 			true_amount = atoi(amount.c_str()); //cast found value from string to int
+			
 			amount.clear(); //clear the string for next tier
 			
 		} //end else if
 		else //if a data line
 		{
+			if (i + true_amount > data.size())
+			{
+				true_amount = data.size() - i;
+			}
 			if (true_amount != 0) //only if at least one line for the tier
 			{
-				int j;
-				for (j = i; j < (i + true_amount); j++) //get the next set of data lines
+				for (c = i; c < (i + true_amount); c++) //get the next set of data lines
 				{
-					if (isdigit(data[j][0]) && (data[j].find(" from ") != string::npos)) //if another tier line is found
+					if (isdigit(data[c][0]) && (data[c].find(" from ") != string::npos)) //if another tier line is found
 					{
 						break; //leave the loop
 					}
@@ -349,16 +354,16 @@ void write_csv(ofstream& output, vector<string> &data)
 					{
 						line l;
 						//print number of NA strings determined by find_tier()
-						for (int n = 0; n < NA_count; n ++)
+						for (int n = 0; n < NA_count; n++)
 						{
-						l.push_back("NA,");
+							l.push_back("NA,");
 						}
 						//print data value
-						l.push_back(data[j]);
+						l.push_back(data[c]);
 						//insert line based on insert_pos value
 						if (insert_pos == -1) //for no tier line (should never trigger)
 						{
-						lines.push_back(l);
+							lines.push_back(l);
 						}
 						else //for lines with a tier
 						{
@@ -366,7 +371,7 @@ void write_csv(ofstream& output, vector<string> &data)
 						}
 					}
 				}
-				i = j - 1; // needed to prevent duplicates in output
+				i = c - 1; // needed to prevent duplicates in output
 			}//end if
 		} //end else
 	} //end for
